@@ -4,6 +4,8 @@ import json
 import random
 import os.path
 import lxml
+# import imdb
+#imdb only compatable with python 2.7
 
 
 def instagram_graphql():
@@ -58,6 +60,7 @@ def parse_data(s):
 
 def scrape_data(username):
     r = requests.get(insta_url().format(username))
+    print(insta_url().format(username))
     s = BeautifulSoup(r.text, "html.parser")
     meta = s.find("meta", property="og:description")
 
@@ -67,7 +70,6 @@ def scrape_data(username):
 def main():
     # username = ""
     username = input("enter user name: ")
-
     if username == "":
         print("please enter user name")
     else:
