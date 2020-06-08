@@ -4,8 +4,11 @@ import json
 import random
 import os.path
 import lxml
+import re
+
+
 # import imdb
-#imdb only compatable with python 2.7
+# imdb only compatable with python 2.7
 
 
 def instagram_graphql():
@@ -67,18 +70,100 @@ def scrape_data(username):
     return parse_data(meta.attrs['content'])
 
 
+def youtube_data_filter(search_query, filter):
+    link = 'https://www.youtube.com/results?search_query={}'
+    links = requests.get(link.format(search_query))
+    html = links.content
+    html_parser = BeautifulSoup(html, 'html.parser')
+    # videos_list = html_parser.findAll('ol', {'class': 'item-section'})
+    # videos_list = html_parser.findAll('div', {'id': 'content'})
+    # videos_list = html_parser.findAll('div', {'id': 'results'})
+    videos_list = html_parser.findAll('div', {'class': 'filter-col'})
+
+    # videos_list = html_parser.findAll('div', {'class': 'yt-lockup-thumbnail contains-addto'})
+
+    #
+    video_img = videos_list[0]
+
+    complete_link_last_hr = " "
+    link_today = " "
+    link_week = " "
+    link_month = " "
+    for filters in videos_list:
+        search_url = filters.ul
+        youtube = "https://youtube.com{}"
+
+        for search in search_url:
+            try:
+                url_query = search.a['href']
+                if "Last hour" in search.text and filter == "last hour":
+                    complete_link_last_hr += youtube.format(url_query).replace(',', '')
+                    return complete_link_last_hr
+                elif "Today" in search.text and filter == "today":
+                    link_today += youtube.format(url_query).replace(',', '')
+                    return link_today
+                elif "This week" in search.text and filter == "this week":
+                    link_week += youtube.format(url_query).replace(',', '')
+                    return link_week
+                elif "This month" in search.text and filter == "this month":
+                    link_month += youtube.format(url_query).replace(',', '')
+                    return link_month
+            except IndexError as error:
+                print(error.args)
+            except:
+                continue
+
+
+def youtube_vide_data(search):
+    link = 'https://www.youtube.com/results?search_query={}'
+    links = requests.get(link.format(search))
+    html = links.content
+    html_parser = BeautifulSoup(html, 'html.parser')
+    videos_list = html_parser.findAll('div', {'class': 'yt-lockup-dismissable yt-uix-tile'})
+
+    videos = videos_list
+    # print(videos)
+    for video in videos:
+        upload = video.findAll('ul', {'class': 'yt-lockup-meta-info'})
+        image = video.div.img['src']
+        upload_date = upload[0].li.text
+
+        # get views too
+        # upload[0].text
+        descriptions = video.findAll('div', {'class': 'yt-lockup-description yt-ui-ellipsis yt-ui-ellipsis-2'})
+        video_descriptions = descriptions[0].text
+        video_link = "https://www.youtube.com{}"
+        user = video.a['href']
+        print(video_link.format(user)+ video_descriptions + upload[0].text)
+
+
 def main():
+    search = input("Please enter search term")
+    youtube_vide_data(search)
+    # while True:
+    #     search_query = input("please enter country name to search: ")
+    #     filter = input("Search for last hour, today, this week or this minth: ")
+    #     print(youtube_data_filter(search_query, filter))
+    #     cont = input("do you wanna continue: ")
+    #     if cont == "yes":
+    #         search_query = input("please enter country name to search: ")
+    #         filter = input("Search for last hour, today, this week or this minth: ")
+    #         print(youtube_data_filter(search_query, filter))
+    #         cont = input("do you wanna continue: ")
+    #     if cont == "no":
+    #         break
+
     # username = ""
-    username = input("enter user name: ")
-    if username == "":
-        print("please enter user name")
-    else:
-        data = scrape_data(username)
-        print(username + "{")
-        print("\tFollowers:" + " " + data.get("Followers"))
-        print("\tFollowing:" + " " + data.get("Following"))
-        print("\tPosts:" + " " + data.get("Posts"))
-        print("}")
+    # username = input("enter user name: ")
+    # if username == "":
+    #     print("please enter user name")
+    # else:
+    #     data = scrape_data(username)
+    #     print(username + "{")
+    #     print("\tFollowers:" + " " + data.get("Followers"))
+    #     print("\tFollowing:" + " " + data.get("Following"))
+    #     print("\tPosts:" + " " + data.get("Posts"))
+    #     print("}")
 
     # instagram_graphql()
 
