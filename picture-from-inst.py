@@ -2,9 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import random
-import os.path
+import os
 import lxml
 import re
+import pytube
 
 
 # import imdb
@@ -122,24 +123,47 @@ def youtube_vide_data(search):
     videos_list = html_parser.findAll('div', {'class': 'yt-lockup-dismissable yt-uix-tile'})
 
     videos = videos_list
+    video_links = ''
     # print(videos)
     for video in videos:
-        upload = video.findAll('ul', {'class': 'yt-lockup-meta-info'})
-        image = video.div.img['src']
-        upload_date = upload[0].li.text
+        # upload = video.findAll('ul', {'class': 'yt-lockup-meta-info'})
+        upload = video.findAll('div', {'class': 'yt-lockup-meta'})
+
+        # image = video.div.img['src']
+        # upload_date = upload[0].li.text
+
 
         # get views too
         # upload[0].text
-        descriptions = video.findAll('div', {'class': 'yt-lockup-description yt-ui-ellipsis yt-ui-ellipsis-2'})
+        # descriptions = video.findAll('div', {'class': 'yt-lockup-description yt-ui-ellipsis yt-ui-ellipsis-2'})
+        descriptions = video.findAll('h3', {'class': 'yt-lockup-title'})
+
         video_descriptions = descriptions[0].text
         video_link = "https://www.youtube.com{}"
         user = video.a['href']
-        print(video_link.format(user)+ video_descriptions + upload[0].text)
+        # print(video_link.format(user)+ video_descriptions + upload[0].text)
+        video_links += video_link.format(user)+ video_descriptions + '\n'
+    return video_links
+def download_youtube_video(link):
+    # save_video = os.mkdir('save')
+    save = ''
+    videos = pytube.YouTube(youtube_vide_data(link))
+    video = videos.streams.filter(progressive=True, file_extension='mp4')
+    # audio = videos.streams.filter(only_audio=True).first()
+
+    download_video = video.get_highest_resolution()
+    # audio.download(save)
+    print("downloading....")
+    if download_video.download(save):
+        print('download finish')
+
 
 
 def main():
-    search = input("Please enter search term")
-    youtube_vide_data(search)
+    search = input("Please enter search term: ")
+    # print(youtube_vide_data(search))
+    # link = input("Please enter url link to download: ")
+    # download_youtube_video(link)
     # while True:
     #     search_query = input("please enter country name to search: ")
     #     filter = input("Search for last hour, today, this week or this minth: ")
@@ -153,7 +177,6 @@ def main():
     #     if cont == "no":
     #         break
 
-    # username = ""
     # username = input("enter user name: ")
     # if username == "":
     #     print("please enter user name")
