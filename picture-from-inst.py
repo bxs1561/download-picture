@@ -6,6 +6,8 @@ import os
 import lxml
 import re
 import pytube
+import youtube_dl
+import requests
 
 
 # import imdb
@@ -23,7 +25,6 @@ def instagram_graphql():
     # url = 'https://www.instagram.com/<user_name>/?__a=1'
     data = res.json()
     full_name = data['graphql']['user']['full_name']
-    # profile = json.dumps(res)
     print("full name: " + " " + full_name)
     print("folower:" + " " + str(data['graphql']["user"]["edge_followed_by"]['count']))
     # print(data['graphql']['user']['profile_pic_url_hd'])
@@ -123,31 +124,26 @@ def youtube_vide_data(search):
     videos_list = html_parser.findAll('div', {'class': 'yt-lockup-dismissable yt-uix-tile'})
 
     videos = videos_list
-    video_links = ''
-    # print(videos)
+    video_links = []
     for video in videos:
-        # upload = video.findAll('ul', {'class': 'yt-lockup-meta-info'})
         upload = video.findAll('div', {'class': 'yt-lockup-meta'})
-
-        # image = video.div.img['src']
-        # upload_date = upload[0].li.text
-
-
-        # get views too
-        # upload[0].text
-        # descriptions = video.findAll('div', {'class': 'yt-lockup-description yt-ui-ellipsis yt-ui-ellipsis-2'})
         descriptions = video.findAll('h3', {'class': 'yt-lockup-title'})
 
         video_descriptions = descriptions[0].text
         video_link = "https://www.youtube.com{}"
         user = video.a['href']
         # print(video_link.format(user)+ video_descriptions + upload[0].text)
-        video_links += video_link.format(user)+ video_descriptions + '\n'
+        # video_links += video_link.format(user)+ video_descriptions + '\n'
+        video_links.append(video_link.format(user) + video_descriptions)
+        # video_links = [vid]
+
     return video_links
+
+
 def download_youtube_video(link):
     # save_video = os.mkdir('save')
-    save = ''
-    videos = pytube.YouTube(youtube_vide_data(link))
+    save = '/Users/bikramsubedi/PycharmProjects/download_picture'
+    videos = pytube.YouTube(link)
     video = videos.streams.filter(progressive=True, file_extension='mp4')
     # audio = videos.streams.filter(only_audio=True).first()
 
@@ -158,9 +154,49 @@ def download_youtube_video(link):
         print('download finish')
 
 
+def youtube_download_using_youtube_dl(search):
+    ydl_opts = {}
+    # for mp3
+    # bestvideo for best video
+    # ydl_opts = {
+    #     'format': 'bestvideo/best',
+    #     'postprocessors': [{
+    #         'key': 'FFmpegExtractAudio',
+    #         'preferredcodec': 'mp3',
+    #         'preferredquality': '192',
+    #     }],
+    # }
+    # ydl_opts = {
+    #     'format': 'bestvideo/best'+'bestaudio/best'
+    #
+    # }
+    # ydl_opts = {
+    #     '-f': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]',
+    # }
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([search])
+
+
+def download_content_from_website():
+    url = ''
+    r = requests.get(url)
+    html = BeautifulSoup(r.content, 'html.parser')
+    links = html.findAll('a')
 
 def main():
     search = input("Please enter search term: ")
+    vide0 = youtube_vide_data(search)[0]
+    download_youtube_video(vide0)
+    # youtube_download_using_youtube_dl(vide0)
+
+    # download_video_series(vide0)
+    # print(youtube_vide_data(search))
+    # 'https://barristerbabu.su/mahabharat-10th-june-2020-video-episode-47/'
+    # video = download_content_from_website()
+    # download_video_series(video)
+
+    # youtube_download_using_youtube_dl(search)
+
     # print(youtube_vide_data(search))
     # link = input("Please enter url link to download: ")
     # download_youtube_video(link)
